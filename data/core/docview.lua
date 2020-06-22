@@ -83,7 +83,6 @@ function DocView:try_close(do_close)
   end
 end
 
-
 function DocView:get_name()
   local post = self.doc:is_dirty() and "*" or ""
   local name = self.doc:get_name()
@@ -110,9 +109,8 @@ function DocView:get_gutter_width()
   return self:get_font():get_width(#self.doc.lines) + style.padding.x * 2
 end
 
-
 function DocView:get_line_screen_position(idx)
-  local idx = self:view_line_to_doc(idx)
+  local idx = self:doc_line_to_view(idx)
   local x, y = self:get_content_offset()
   local lh = self:get_line_height()
   local gw = self:get_gutter_width()
@@ -133,8 +131,8 @@ function DocView:get_visible_line_range()
   local minline = math.max(1, math.floor(y / lh))
   local maxline = math.min(#self.doc.lines, math.floor(y2 / lh) + 1)
 --   return self:view_line_to_doc(minline), self:view_line_to_doc(maxline)
---   return minline, maxline
-  return minline, self:view_line_to_doc(maxline)
+  return minline, maxline
+--   return minline, self:view_line_to_doc(maxline)
 end
 
 
@@ -353,10 +351,8 @@ function DocView:draw()
   local x = self.position.x
 
   for i = minline, maxline do
-    if not self:line_folded(i) then
-      self:draw_line_gutter(i, x, y)
-      y = y + lh
-    end
+    self:draw_line_gutter(self:view_line_to_doc(i), x, y)
+    y = y + lh
   end
 
   local x, y = self:get_line_screen_position(minline)
@@ -364,10 +360,8 @@ function DocView:draw()
   local pos = self.position
   core.push_clip_rect(pos.x + gw, pos.y, self.size.x, self.size.y)
   for i = minline, maxline do
-    if not self:line_folded(i) then
-      self:draw_line_body(i, x, y)
-      y = y + lh
-    end
+    self:draw_line_body(self:view_line_to_doc(i), x, y)
+    y = y + lh
   end
   core.pop_clip_rect()
 
@@ -377,7 +371,7 @@ end
 function DocView:add_fold(fstart, fend)
   for i,v in ipairs(self.folds) do
     if v.fstart >= fstart then
-      table.insert(self.folds, i, {fstart = fstart, fend = fend})
+      table.insert(self.folds, i, {fstart = fstart, fend = fend, active=false})
       return
     end
   end
@@ -394,6 +388,18 @@ function DocView:view_line_to_doc(viewline)
     end
   end
   return realline
+end
+
+function DocView:doc_line_to_view(realline)
+  local viewline = realline
+  for i,v in ipairs(self.folds) do
+    if v.fstart < realline then
+      viewline = viewline - (v.fend - v.fstart)
+    else
+      break
+    end
+  end
+  return viewline
 end
 
 function DocView:line_folded(line)
