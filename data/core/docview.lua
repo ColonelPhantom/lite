@@ -129,9 +129,9 @@ function DocView:get_visible_line_range()
   local x, y, x2, y2 = self:get_content_bounds()
   local lh = self:get_line_height()
   local minline = math.max(1, math.floor(y / lh))
-  local maxline = math.min(#self.doc.lines, math.floor(y2 / lh) + 1)
---   return self:view_line_to_doc(minline), self:view_line_to_doc(maxline)
-  return minline, maxline
+  local maxline = math.min(#self.doc.lines, self:view_line_to_doc(math.floor(y2 / lh) + 1))
+  return self:view_line_to_doc(minline), (maxline)
+--   return minline, maxline
 --   return minline, self:view_line_to_doc(maxline)
 end
 
@@ -175,7 +175,8 @@ function DocView:scroll_to_line(line, ignore_if_visible, instant)
   local min, max = self:get_visible_line_range()
   if not (ignore_if_visible and line > min and line < max) then
     local lh = self:get_line_height()
-    self.scroll.to.y = math.max(0, lh * (line - 1) - self.size.y / 2)
+    local target_line = self:doc_line_to_view(line)
+    self.scroll.to.y = math.max(0, lh * (target_line - 1) - self.size.y / 2)
     if instant then
       self.scroll.y = self.scroll.to.y
     end
@@ -184,6 +185,7 @@ end
 
 
 function DocView:scroll_to_make_visible(line, col)
+  local line = self:doc_line_to_view(line)
   local min = self:get_line_height() * (line - 1)
   local max = self:get_line_height() * (line + 2) - self.size.y
   self.scroll.to.y = math.min(self.scroll.to.y, min)
@@ -351,8 +353,10 @@ function DocView:draw()
   local x = self.position.x
 
   for i = minline, maxline do
-    self:draw_line_gutter(self:view_line_to_doc(i), x, y)
-    y = y + lh
+    if not self:line_folded(i) then
+      self:draw_line_gutter(i, x, y)
+      y = y + lh
+    end
   end
 
   local x, y = self:get_line_screen_position(minline)
@@ -360,8 +364,10 @@ function DocView:draw()
   local pos = self.position
   core.push_clip_rect(pos.x + gw, pos.y, self.size.x, self.size.y)
   for i = minline, maxline do
-    self:draw_line_body(self:view_line_to_doc(i), x, y)
-    y = y + lh
+    if not self:line_folded(i) then
+      self:draw_line_body(i, x, y)
+      y = y + lh
+    end
   end
   core.pop_clip_rect()
 
