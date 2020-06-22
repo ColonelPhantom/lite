@@ -1,7 +1,7 @@
 local syntax = require "core.syntax"
 
 syntax.add {
-  files = { "%.c$", "%.h$", "%.inl$", "%.cpp$", "%.hpp$" },
+  files = { "%.c$", "%.h$", "%.inl$", "%.cpp$", "%.hpp$", "%.ino$" },
   comment = "//",
   patterns = {
     { pattern = "//.-\n",               type = "comment"  },
@@ -48,6 +48,7 @@ syntax.add {
     ["long"]     = "keyword2",
     ["float"]    = "keyword2",
     ["double"]   = "keyword2",
+    ["byte"]     = "keyword2",
     ["char"]     = "keyword2",
     ["unsigned"] = "keyword2",
     ["bool"]     = "keyword2",
