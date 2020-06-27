@@ -1,0 +1,3 @@
+[submodule "data/plugins/console"]
+	path = data/plugins/console
+	url = https://github.com/rxi/console

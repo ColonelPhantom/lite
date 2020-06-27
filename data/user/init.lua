@@ -11,3 +11,8 @@ local style = require "core.style"
 -- key binding:
 -- keymap.add { ["ctrl+escape"] = "core:quit" }
 
+-- TODO tree
+table.insert(config.ignore_paths, "target")
+table.insert(config.ignore_paths, "release")
+table.insert(config.ignore_paths, "lib")
+
